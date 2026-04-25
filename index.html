@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Escape Room</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    body { 
+        margin: 0; 
+        overflow: hidden;
+        font-family: 'Inter', sans-serif;
+    }
+
+    #inventory-container {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        bottom: 20px;
+        width: 300px;
+        background: rgba(30, 35, 40, 0.4);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-radius: 24px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        color: #fff;
+        display: flex;
+        flex-direction: column;
+        padding: 24px;
+        box-sizing: border-box;
+        z-index: 100;
+        transition: all 0.3s ease;
+        pointer-events: auto;
+    }
+
+    .inventory-title {
+        font-size: 22px;
+        font-weight: 600;
+        margin-bottom: 24px;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        text-align: center;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        background: linear-gradient(135deg, #ffffff 0%, #a0a5aa 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+    }
+
+    .inventory-title::before, .inventory-title::after {
+        content: '';
+        height: 1px;
+        flex: 1;
+        background: linear-gradient(to right, transparent, rgba(255,255,255,0.3), transparent);
+    }
+
+    .inventory-slots {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
+        overflow-y: auto;
+        padding-right: 5px; /* For scrollbar */
+        padding-bottom: 10px;
+    }
+
+    /* Custom Scrollbar for slots */
+    .inventory-slots::-webkit-scrollbar {
+        width: 6px;
+    }
+    .inventory-slots::-webkit-scrollbar-track {
+        background: rgba(0, 0, 0, 0.2);
+        border-radius: 10px;
+    }
+    .inventory-slots::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 10px;
+    }
+    .inventory-slots::-webkit-scrollbar-thumb:hover {
+        background: rgba(255, 255, 255, 0.4);
+    }
+
+    .slot {
+        aspect-ratio: 1 / 1;
+        background: rgba(0, 0, 0, 0.3);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: inset 0 2px 10px rgba(0,0,0,0.3);
+        transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        cursor: pointer;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .slot::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 100%);
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    .slot:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 20px rgba(0,0,0,0.4), inset 0 2px 10px rgba(0,0,0,0.2);
+        border-color: rgba(255, 255, 255, 0.4);
+        background: rgba(0, 0, 0, 0.4);
+    }
+
+    .slot:hover::before {
+        opacity: 1;
+    }
+
+    /* Pulse animation for empty slots to make them feel alive */
+    @keyframes subtlePulse {
+        0% { box-shadow: inset 0 2px 10px rgba(0,0,0,0.3); }
+        50% { box-shadow: inset 0 2px 10px rgba(0,0,0,0.3), inset 0 0 15px rgba(255,255,255,0.05); }
+        100% { box-shadow: inset 0 2px 10px rgba(0,0,0,0.3); }
+    }
+
+    .slot:empty {
+        animation: subtlePulse 4s infinite ease-in-out;
+    }
+
+    /* Item image styling */
+    .slot img {
+        max-width: 80%;
+        max-height: 80%;
+        object-fit: contain;
+        filter: drop-shadow(0 5px 10px rgba(0,0,0,0.5));
+        transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .slot:hover img {
+        transform: scale(1.15) rotate(-5deg);
+    }
+
+    /* Item icon (emoji/text) styling */
+    .slot .item-icon {
+        font-size: 40px;
+        filter: drop-shadow(0 5px 10px rgba(0,0,0,0.6));
+        transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        user-select: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .slot:hover .item-icon {
+        transform: scale(1.25) rotate(-10deg);
+    }
+
+    /* Object Notification */
+    #object-notification {
+        position: absolute;
+        bottom: 40px;
+        left: 50%;
+        transform: translateX(-50%) translateY(20px);
+        background: rgba(20, 25, 30, 0.85);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 30px;
+        color: #fff;
+        padding: 12px 32px;
+        font-size: 18px;
+        font-weight: 600;
+        opacity: 0;
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        pointer-events: none;
+        z-index: 1000;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.1);
+        letter-spacing: 1px;
+    }
+
+    #object-notification.show {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
+  </style>
+</head>
+<body>
+  <div id="object-notification">Tên đồ vật</div>
+  <div id="inventory-container">
+    <div class="inventory-title">Items</div>
+    <div class="inventory-slots" id="inventory-slots">
+      <div class="slot"></div>
+      <div class="slot"></div>
+      <div class="slot"></div>
+      <div class="slot"></div>
+      <div class="slot"></div>
+      <div class="slot"></div>
+      <div class="slot"></div>
+      <div class="slot"></div>
+    </div>
+  </div>
+  <script type="module" src="/main.js"></script>
+</body>
+</html>
