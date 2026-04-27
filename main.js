@@ -76,7 +76,7 @@ window.addEventListener('click', (event) => {
 
         // --- XỬ LÝ NHẶT VẬT PHẨM ---
         // Khi bấm vào đồ vật có thể nhặt và nó chưa bị ẩn
-        if ((clickedObject.name === 'Cube092_Merged' || clickedObject.name === 'Cube075_Merged' || nameLowerCase.includes('tray') || nameLowerCase.includes('cylinder002') || nameLowerCase.includes('cylinder.002') || nameLowerCase.includes('paper')) && clickedObject.visible !== false) {
+        if ((clickedObject.name === 'Cube092_Merged' || clickedObject.name === 'Cube075_Merged' || nameLowerCase.includes('key001') || nameLowerCase.includes('cylinder002') || nameLowerCase.includes('cylinder.002') || nameLowerCase.includes('paper')) && clickedObject.visible !== false) {
             // 1. Thêm vào túi đồ bằng cách chụp ảnh vật thể
             addToInventory(clickedObject);
             // 2. Làm biến mất khỏi phòng 3D
