@@ -116,6 +116,80 @@ window.addEventListener('click', (event) => {
     }
 });
 
+window.addEventListener('mousemove', (event) => {
+    // Bỏ qua nếu đang trỏ vào khung túi đồ
+    if (event.target.closest('#inventory-container')) {
+        document.body.style.cursor = 'default';
+        return;
+    }
+
+    if (isTransitioning()) {
+        document.body.style.cursor = 'default';
+        return;
+    }
+
+    // Chuyển đổi tọa độ chuột sang NDC (-1 đến +1)
+    mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+    mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+    // Cập nhật tia ray
+    raycaster.setFromCamera(mouse, camera);
+
+    // Tìm các điểm giao cắt
+    const intersects = raycaster.intersectObjects(scene.children, true);
+
+    // --- KIỂM TRA CHUYỂN PHÒNG VỚI DOOR004 ---
+    let door004Hovered = false;
+    scene.traverse((child) => {
+        if (child.name && (child.name.toLowerCase().includes('door004') || child.name.toLowerCase().includes('door.004'))) {
+            const box = new THREE.Box3().setFromObject(child);
+            const boxIntersection = raycaster.ray.intersectBox(box, new THREE.Vector3());
+            if (boxIntersection) {
+                const distanceToBox = raycaster.ray.origin.distanceTo(boxIntersection);
+                if (intersects.length === 0 || distanceToBox <= intersects[0].distance + 0.5) {
+                    door004Hovered = true;
+                }
+            }
+        }
+    });
+
+    if (door004Hovered) {
+        document.body.style.cursor = 'pointer';
+        return;
+    }
+
+    if (intersects.length > 0) {
+        let hoveredObject = intersects[0].object;
+        
+        // Nếu object là một phần của Group đã gộp, ta lấy Group đó làm đối tượng chính
+        if (hoveredObject.parent && hoveredObject.parent.name.includes('_Merged')) {
+            hoveredObject = hoveredObject.parent;
+        }
+
+        const nameLowerCase = hoveredObject.name.toLowerCase();
+        
+        // Bỏ qua tường, sàn, phòng và door002
+        if (nameLowerCase.includes('wall') || nameLowerCase.includes('floor') || nameLowerCase.includes('room') || nameLowerCase.includes('door002') || nameLowerCase.includes('door.002')) {
+            document.body.style.cursor = 'default';
+            return; 
+        }
+
+        // Kiểm tra các đồ vật có thể tương tác
+        const isPickable = (hoveredObject.name === 'Cube092_Merged' || hoveredObject.name === 'Cube075_Merged' || nameLowerCase.includes('key001') || nameLowerCase.includes('cylinder002') || nameLowerCase.includes('cylinder.002') || nameLowerCase.includes('paper'));
+        const isDoorRight = (nameLowerCase.includes('door right001') || nameLowerCase.includes('door_right001') || nameLowerCase.includes('door right.001'));
+        const isDoorLeft = (nameLowerCase.includes('door left001') || nameLowerCase.includes('door_left001') || nameLowerCase.includes('door left.001'));
+        const isDrawer = nameLowerCase.includes('cube022');
+
+        if ((isPickable || isDoorRight || isDoorLeft || isDrawer) && hoveredObject.visible !== false) {
+            document.body.style.cursor = 'pointer';
+            return;
+        }
+    }
+
+    // Nếu không trúng vật thể nào tương tác được
+    document.body.style.cursor = 'default';
+});
+
 function hasItemInInventory(namePart) {
     const items = document.querySelectorAll('.slot img');
     for (let img of items) {
