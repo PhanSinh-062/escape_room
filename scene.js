@@ -208,9 +208,8 @@ export function loadRoom(scene, roomUrl, transitionDirection = 1) {
 
             // 2. Tìm các object nằm sát tường (tranh, cửa, kệ, rèm...) và ghép chung vào tường đó
             gltf.scene.children.forEach((child) => {
-                // Bỏ qua tường, sàn, ghế sofa và cuốn sách Fiction book.014
-                if (child.name.startsWith('Wall') || child.name.toLowerCase().includes('floor') || child.name.startsWith('F_') || child.name.toLowerCase().includes('sofa') || child.name.toLowerCase().includes('Fiction book.014')) return;
-
+                // Bỏ qua tường, sàn, ghế sofa, và Cube074 (sách)
+                if (child.name.startsWith('Wall') || child.name.toLowerCase().includes('floor') || child.name.startsWith('F_') || child.name.toLowerCase().includes('sofa') || child.name.toLowerCase().includes('cube074')) return;
                 const box = new THREE.Box3().setFromObject(child);
                 if (box.isEmpty()) return;
 
